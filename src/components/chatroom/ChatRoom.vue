@@ -25,7 +25,7 @@
           <div v-if="autoCompleteList.length > 0" class="autocomplete">
             <span :data-participant="acParticipant.name" @click="completeParticipant(i)" :class="{'ac-selected': acParticipant.selected}" class="autocomplete-item" v-for="(acParticipant,i) in autoCompleteList" :key="i">{{acParticipant.name}}</span>
           </div>
-          <input class="msg-input-content" ref='message' v-model='message' type="text" @keydown="inputHandler"
+          <input class="msg-input-content" ref='message' v-model='message' type="text" @keydown="keydownHandler" @keyup="keyupHandler" @input="inputHandler"
             placeholder="Message">
         </div>
       </div>
@@ -72,11 +72,6 @@ export default {
     axios.get('http://localhost:5000/connections').then(r => this.loadParticipants(r.data));
   },
   methods: {
-    inputCheck(e){
-      if ((e.code == "Enter" || e.code == "Tab" || e.code ==="ArrowUp" || e.code === "ArrowDown") && this.doAutoComplete) {
-        e.preventDefault();
-      }
-    },
       generateAutoCompleteList() {
       if (this.doAutoComplete){
         this.autoCompleteList = this.connectedParticipants.reduce((a, e, i) => {
@@ -92,25 +87,36 @@ export default {
         this.autoCompleteList = [];
       }
     },
-    inputHandler(e){
-      //
-      // Needs to be refactored to route these functions accordingly.
-      //
-
+    keydownHandler(e){
+      if (this.doAutoComplete) {
+        if (this.autoCompleteList.length > 0 && (e.code == "ArrowUp" || e.code == "ArrowDown")) {
+          this.autoCompleteSelect(e)
+          e.preventDefault();
+        }
+      }
+    },
+    keyupHandler(e) {
       if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete){
-        this.completeParticipant(this.autoCompleteList.findIndex(e => e.selected))
+        // Do not send message instead autocomplete participant's handle
+        this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
         e.preventDefault();
         return
       } else if (e.code == "Enter") {
+        // Send message
         this.emit();
+        return
       }
-
+      
+      // Only need to check for autocomplete when scrolling side to side - see discord functionality ;)
+      if(e.code === "ArrowLeft" || e.code === "ArrowRight") {
+        this.autoCompleteTest(e)
+      }
+    },
+    inputHandler(e){
+      console.log(e)
       this.autoCompleteTest(e)
-
-      if (this.doAutoComplete && e.code !== "ArrowDown" && e.code !== "ArrowUp") this.generateAutoCompleteList();
-
-      if (this.doAutoComplete && this.autoCompleteList.length > 0 && (e.code == "ArrowUp" || e.code == "ArrowDown")) {
-        
+    },
+    autoCompleteSelect(e) {
         let currentIndex = this.autoCompleteList.findIndex(ele => ele.selected);
         let nextIndex = 0;
         let cursorPos = this.$refs.message.selectionStart;
@@ -123,20 +129,14 @@ export default {
 
         this.autoCompleteList[currentIndex].selected = false;
         this.autoCompleteList[nextIndex].selected = true;
-
-      }
     },
     autoCompleteTest(e) {
+      let inc = 1;
 
-      // TODO: Slicing is ugly here. Needs to be cleaned up to properly with keydown
-
-      let inc;
-
+      // We're going in the opposite direction position cursor accordingly for filtering
       if (e.code === "ArrowLeft" || e.code === "Backspace" || e.key === '@') {
-        inc = -1;
-      } else {
-        inc = 1; 
-      }
+        inc = 0;
+      } 
 
       if (e.key === '@') {
         this.lastAt = this.$refs.message.selectionStart;
@@ -148,12 +148,17 @@ export default {
       
       this.slicePos = this.$refs.message.selectionStart + inc;
 
-      this.autoCompleteFilter = this.message.substring(this.lastAt + inc, this.slicePos);
-      console.log(this.autoCompleteFilter);
+      console.log(this.message);
+
+      this.autoCompleteFilter = this.message.substring(this.lastAt + 1, this.slicePos);
+
+      console.log(this.autoCompleteFilter)
+
       this.autoCompleteFilter = this.autoCompleteFilter === ' ' ? '' : this.autoCompleteFilter;
 
       if (this.slicePos > this.lastAt && (prevChar === ' ' || prevChar === '') && this.lastAt > -1) {
         this.doAutoComplete = true;
+        this.generateAutoCompleteList();
       } else {
         this.clearAutoComplete();
       }
