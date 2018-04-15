@@ -23,10 +23,24 @@
         </div>
         <div class="msg-input">
           <div v-if="autoCompleteList.length > 0" class="autocomplete">
-            <span :data-participant="acParticipant.name" @click="completeParticipant(i)" :class="{'ac-selected': acParticipant.selected}" class="autocomplete-item" v-for="(acParticipant,i) in autoCompleteList" :key="i">{{acParticipant.name}}</span>
+            <span 
+              :data-participant="acParticipant.name" 
+              @click="completeParticipant(i)" 
+              :class="{'ac-selected': acParticipant.selected}" 
+              class="autocomplete-item" v-for="(acParticipant,i) in autoCompleteList" 
+              :key="i">{{acParticipant.name}}
+            </span>
           </div>
-          <input class="msg-input-content" ref='message' v-model='message' type="text" @keydown="keydownHandler" @keyup="keyupHandler" @input="inputHandler"
-            placeholder="Message">
+          <input 
+            class="msg-input-content" 
+            ref='message' 
+            v-model='message' 
+            type="text" 
+            @keydown="keydownHandler" 
+            @keyup="keyupHandler" 
+            @input="inputHandler"
+            placeholder="Message"
+            :disabled="!connected">
         </div>
       </div>
     </div>
@@ -93,15 +107,16 @@ export default {
       if(e.code === "Tab"){
         e.preventDefault();
       }      
-      
+
       if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete){
-        // Do not send message instead autocomplete participant's handle
         this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
         e.preventDefault();
         return
       } else if (e.code == "Enter") {
         // Send message
-        this.emit();
+        if (this.connected && this.message.length > 0) {
+          this.emit();
+        }
         return
       }
 
@@ -113,7 +128,6 @@ export default {
       }
     },
     keyupHandler(e) {
-      
       // Only need to check for autocomplete when scrolling side to side - see discord functionality ;)
       if(e.code === "ArrowLeft" || e.code === "ArrowRight") {
         this.autoCompleteTest(e)
@@ -137,13 +151,6 @@ export default {
         this.autoCompleteList[nextIndex].selected = true;
     },
     autoCompleteTest(e) {
-      let inc = 1;
-
-      // We're going in the opposite direction position cursor accordingly for filtering
-      if (e.code === "ArrowLeft" || e.code === "Backspace") {
-        inc = -1;
-      } 
-
       this.lastAt = this.message.substring(0, this.$refs.message.selectionStart).lastIndexOf('@');
 
       let prevChar = this.message.charAt(this.lastAt - 1);
@@ -152,11 +159,12 @@ export default {
       this.slicePos = this.$refs.message.selectionStart;
 
       this.autoCompleteFilter = this.message.substring(this.lastAt + 1, this.slicePos);
-      this.autoCompleteFilter = this.autoCompleteFilter === ' ' ? '' : this.autoCompleteFilter;
+      //this.autoCompleteFilter = this.autoCompleteFilter === ' ' ? '' : this.autoCompleteFilter;
 
       if (this.slicePos > this.lastAt && (prevChar === ' ' || prevChar === '') && this.lastAt > -1) {
         this.doAutoComplete = true;
         this.generateAutoCompleteList();
+        this.doAutoComplete = this.autoCompleteList.length > 0;
       } else {
         this.clearAutoComplete();
       }
@@ -174,10 +182,9 @@ export default {
       this.message = `${this.message.substring(0, this.lastAt + 1)}${this.autoCompleteList[index].name}${end}`;
       this.clearAutoComplete();
 
-      this.$refs.message.focus();
       this.$refs.message.selectionStart = start.length;
       this.$refs.message.selectionEnd = start.length;
-      this.$forceUpdate();
+
     },
     loadParticipants(data) {
         this.connectedParticipants = [];
