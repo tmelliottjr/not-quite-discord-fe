@@ -88,14 +88,6 @@ export default {
       }
     },
     keydownHandler(e){
-      if (this.doAutoComplete) {
-        if (this.autoCompleteList.length > 0 && (e.code == "ArrowUp" || e.code == "ArrowDown")) {
-          this.autoCompleteSelect(e)
-          e.preventDefault();
-        }
-      }
-    },
-    keyupHandler(e) {
       if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete){
         // Do not send message instead autocomplete participant's handle
         this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
@@ -106,6 +98,15 @@ export default {
         this.emit();
         return
       }
+
+      if (this.doAutoComplete) {
+        if (this.autoCompleteList.length > 0 && (e.code == "ArrowUp" || e.code == "ArrowDown")) {
+          this.autoCompleteSelect(e)
+          e.preventDefault();
+        }
+      }
+    },
+    keyupHandler(e) {
       
       // Only need to check for autocomplete when scrolling side to side - see discord functionality ;)
       if(e.code === "ArrowLeft" || e.code === "ArrowRight") {
@@ -113,7 +114,6 @@ export default {
       }
     },
     inputHandler(e){
-      console.log(e)
       this.autoCompleteTest(e)
     },
     autoCompleteSelect(e) {
@@ -134,26 +134,18 @@ export default {
       let inc = 1;
 
       // We're going in the opposite direction position cursor accordingly for filtering
-      if (e.code === "ArrowLeft" || e.code === "Backspace" || e.key === '@') {
-        inc = 0;
+      if (e.code === "ArrowLeft" || e.code === "Backspace") {
+        inc = -1;
       } 
 
-      if (e.key === '@') {
-        this.lastAt = this.$refs.message.selectionStart;
-      } else {
-        this.lastAt = this.message.substring(0, this.$refs.message.selectionStart + inc).lastIndexOf('@');
-      }
+      this.lastAt = this.message.substring(0, this.$refs.message.selectionStart).lastIndexOf('@');
 
       let prevChar = this.message.charAt(this.lastAt - 1);
-      
-      this.slicePos = this.$refs.message.selectionStart + inc;
+      let nextChar = this.message.charAt(this.lastAt + 1);
 
-      console.log(this.message);
+      this.slicePos = this.$refs.message.selectionStart;
 
       this.autoCompleteFilter = this.message.substring(this.lastAt + 1, this.slicePos);
-
-      console.log(this.autoCompleteFilter)
-
       this.autoCompleteFilter = this.autoCompleteFilter === ' ' ? '' : this.autoCompleteFilter;
 
       if (this.slicePos > this.lastAt && (prevChar === ' ' || prevChar === '') && this.lastAt > -1) {
@@ -196,8 +188,8 @@ export default {
       this.doAutoComplete = false;
     },
     emit(e) {
-        this.socket.emit('client-message', this.message);
-        this.message = '';
+      this.socket.emit('client-message', this.message);
+      this.message = '';
     },
     connect() {
       if (this.name !== '') {
@@ -360,6 +352,7 @@ a {
 }
 .autocomplete-item{
   padding: 5px;
+  font-size: 14px;
   font-weight: bold;
   border-radius: 5px;
 }
