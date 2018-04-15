@@ -88,6 +88,12 @@ export default {
       }
     },
     keydownHandler(e){
+
+      // Disable default tab functionaility
+      if(e.code === "Tab"){
+        e.preventDefault();
+      }      
+      
       if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete){
         // Do not send message instead autocomplete participant's handle
         this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
