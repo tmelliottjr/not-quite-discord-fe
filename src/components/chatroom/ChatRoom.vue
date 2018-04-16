@@ -6,7 +6,7 @@
         Connected as {{name}}
       </div>      
       <div v-else class="join-chat">
-        <input class='connect-name' v-model='name' type="text" placeholder="Name">
+        <input class='connect-name' v-model='name' @keydown.@.prevent @keydown.space.prevent type="text" placeholder="Name">
         <input class='connect-button' :class="name != '' ? 'enabled' : 'disabled'" @click="connect" type="button" value='Connect'>
       </div>
     </div>
@@ -18,7 +18,7 @@
         </ul>
       </div>
       <div class='msg-container'>
-        <div class="msg-list">
+        <div ref="msglist" class="msg-list">
           <msg-item v-for="(msg, i) in messages" :key="`msg-${i}`" :message=msg></msg-item>
         </div>
         <div class="msg-input">
@@ -36,6 +36,7 @@
             ref='message' 
             v-model='message' 
             type="text" 
+            @keydown.tab.prevent
             @keydown="keydownHandler" 
             @keyup="keyupHandler" 
             @input="inputHandler"
@@ -76,38 +77,41 @@ export default {
       doAutoComplete: false,
       autoCompleteFilter: '',
       autoCompleteList: [],
-      slicePos: 0,
+      cursorPos: 0,
     };
   },
   components:{
     MsgItem
   },
   created() {
-    axios.get('http://localhost:5000/connections').then(r => this.loadParticipants(r.data));
+    axios.get('http://173.69.59.200:5000/connections').then(r => this.loadParticipants(r.data));
   },
   methods: {
       generateAutoCompleteList() {
       if (this.doAutoComplete){
         this.autoCompleteList = this.connectedParticipants.reduce((a, e, i) => {
-          if (e.name.toUpperCase().indexOf(this.autoCompleteFilter.toUpperCase()) > -1){
+          if (e.name.toUpperCase().indexOf(this.autoCompleteFilter.toUpperCase()) > -1 && e.name !== this.name){
             a.push({
               name: e.name,
-              selected: a.length == 0 ? true : false,
+              selected: false,
               })
           }
           return a
         }, [])
+
+        this.autoCompleteList.sort((a,b )=>{
+         if(a.name.toUpperCase() < b.name.toUpperCase()) return -1;
+         if(a.name.toUpperCase() > b.name.toUpperCase()) return 1;
+         return 0;
+        })
+
+        this.autoCompleteList.slice(0, 5)
+        this.$set(this.autoCompleteList[0],'selected', true);
       } else {
         this.autoCompleteList = [];
       }
     },
     keydownHandler(e){
-
-      // Disable default tab functionaility
-      if(e.code === "Tab"){
-        e.preventDefault();
-      }      
-
       if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete){
         this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
         e.preventDefault();
@@ -139,7 +143,6 @@ export default {
     autoCompleteSelect(e) {
         let currentIndex = this.autoCompleteList.findIndex(ele => ele.selected);
         let nextIndex = 0;
-        let cursorPos = this.$refs.message.selectionStart;
 
         if (e.code === "ArrowDown") {
           nextIndex = currentIndex == this.autoCompleteList.length - 1? 0 : currentIndex + 1;
@@ -154,14 +157,12 @@ export default {
       this.lastAt = this.message.substring(0, this.$refs.message.selectionStart).lastIndexOf('@');
 
       let prevChar = this.message.charAt(this.lastAt - 1);
-      let nextChar = this.message.charAt(this.lastAt + 1);
 
-      this.slicePos = this.$refs.message.selectionStart;
+      let cursorPos = this.$refs.message.selectionStart;
 
-      this.autoCompleteFilter = this.message.substring(this.lastAt + 1, this.slicePos);
-      //this.autoCompleteFilter = this.autoCompleteFilter === ' ' ? '' : this.autoCompleteFilter;
+      this.autoCompleteFilter = this.message.substring(this.lastAt + 1, cursorPos);
 
-      if (this.slicePos > this.lastAt && (prevChar === ' ' || prevChar === '') && this.lastAt > -1) {
+      if (cursorPos > this.lastAt && (prevChar === ' ' || prevChar === '') && this.lastAt > -1) {
         this.doAutoComplete = true;
         this.generateAutoCompleteList();
         this.doAutoComplete = this.autoCompleteList.length > 0;
@@ -171,7 +172,7 @@ export default {
     },
     completeParticipant(index) {
       // Preserve space if found
-      let slicePoint = this.message.indexOf(' ', this.slicePos)
+      let slicePoint = this.message.indexOf(' ', this.$refs.message.selectionStart)
 
       let end = ' '
       if (slicePoint > -1){
@@ -179,11 +180,12 @@ export default {
       } 
 
       let start = `${this.message.substring(0, this.lastAt + 1)}${this.autoCompleteList[index].name}`;
-      this.message = `${this.message.substring(0, this.lastAt + 1)}${this.autoCompleteList[index].name}${end}`;
+
+      this.message = `${start}${end}`;
+
       this.clearAutoComplete();
 
-      this.$refs.message.selectionStart = start.length;
-      this.$refs.message.selectionEnd = start.length;
+      this.$refs.message.focus();
 
     },
     loadParticipants(data) {
@@ -206,7 +208,7 @@ export default {
     },
     connect() {
       if (this.name !== '') {
-        this.socket = io('localhost:5000', { query: `name=${this.name}` });
+        this.socket = io('http://173.69.59.200:5000', { query: `name=${this.name}` });
         this.connected = true;
 
         this.socket.on('message', (data) => {
@@ -215,6 +217,9 @@ export default {
           } else {
             this.messages.push({ name: data.name, message: [data.message] });
           }
+
+          this.$refs.msglist.scrollTop = this.$refs.msglist.scrollHeight;
+
         });
         
         this.socket.on('user-connected', this.loadParticipants);
@@ -234,6 +239,14 @@ h1, h2 {
   height: 100%;
   display: grid;
   grid-template-rows: 60px 1fr 60px;
+}
+
+.msg-list {
+    -ms-overflow-style: none;  
+    overflow: -moz-scrollbars-none;  
+}
+.msg-list::-webkit-scrollbar { 
+    display: none;  
 }
 
 .chat-container{
