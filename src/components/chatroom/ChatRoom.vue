@@ -6,8 +6,19 @@
         Connected as {{name}}
       </div>      
       <div v-else class="join-chat">
-        <input class='connect-name' v-model='name' @keydown.@.prevent @keydown.space.prevent type="text" placeholder="Name">
-        <input class='connect-button' :class="name != '' ? 'enabled' : 'disabled'" @click="connect" type="button" value='Connect'>
+        <input 
+          class='connect-name' 
+          v-model='name' 
+          @keydown.@.prevent 
+          @keydown.space.prevent 
+          type="text" 
+          placeholder="Name">
+        <input 
+          class='connect-button' 
+          :class="name != '' ? 'enabled' : 'disabled'" 
+          @click="connect" 
+          type="button" 
+          value='Connect'>
       </div>
     </div>
 
@@ -27,7 +38,8 @@
               :data-participant="acParticipant.name" 
               @click="completeParticipant(i)" 
               :class="{'ac-selected': acParticipant.selected}" 
-              class="autocomplete-item" v-for="(acParticipant,i) in autoCompleteList" 
+              class="autocomplete-item" 
+              v-for="(acParticipant,i) in autoCompleteList" 
               :key="i">{{acParticipant.name}}
             </span>
           </div>
@@ -207,9 +219,20 @@ export default {
       this.message = '';
     },
     connect() {
+
+      let nameVerified = false;
+
       if (this.name !== '') {
         this.socket = io('http://173.69.59.200:5000', { query: `name=${this.name}` });
-        this.connected = true;
+
+        this.socket.on('connection-error', (data) => {
+          //this.connectionError = data;
+          alert('Username already taken.')
+        })
+
+        this.socket.on('connection-success', (data) => {
+          this.connected = true;
+        })
 
         this.socket.on('message', (data) => {
           if (this.messages.length > 0 && this.messages[this.messages.length - 1].name === data.name) {
@@ -376,12 +399,14 @@ a {
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
 }
+
 .autocomplete-item{
   padding: 5px;
   font-size: 14px;
   font-weight: bold;
   border-radius: 5px;
 }
+
 .autocomplete-item:hover, .ac-selected {
   cursor: pointer;
   background-color: rgba(255, 255, 255, 0.05);
