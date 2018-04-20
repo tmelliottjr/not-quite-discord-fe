@@ -1,7 +1,7 @@
 <template>
         <div class="msg">
           <span class="msg-owner">{{message.name}}</span>
-          <span v-for="(m, i) in message.message" :key="`m-${i}`" class="msg-content">{{m}}</span>
+          <span v-for="(msg, i) in message.message" :key="`m-${i}`" class="msg-content" v-html="msg"></span>
         </div>
 </template>
 
@@ -28,7 +28,7 @@ export default {
   font-weight: bold;
   margin-top: 5px;
   margin-bottom: 5px;
-  color:#00f7ff;
+  color: #71e299;
 }
 
 .msg-content{

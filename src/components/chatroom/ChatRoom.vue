@@ -1,13 +1,19 @@
 <template>
   <div class="container">
+    <audio src="/static/msgalert.aac" ref="messagealert"></audio>
 
     <div class="chat-header">
-      <div v-if="connected" class="connected-info">
+      <div class="ch-left">
+        <input type="checkbox" id="allowAlerts" v-model="allowAlerts">
+        <label for="allowAlerts">Message Alerts</label>
+      </div>
+      <div v-if="connected" class="connected-info ch-center">
         Connected as {{name}}
       </div>      
-      <div v-else class="join-chat">
+      <div v-else class="join-chat ch-center">
         <input 
           class='connect-name' 
+          ref='name'
           v-model='name' 
           @keydown.@.prevent 
           @keydown.space.prevent 
@@ -20,6 +26,7 @@
           type="button" 
           value='Connect'>
       </div>
+      <div class="ch-right"></div>
     </div>
 
     <div class="chat-container">
@@ -71,9 +78,11 @@
 import io from 'socket.io-client';
 import axios from 'axios';
 import MsgItem from './MsgItem';
+import messageHelpers from '../../mixins/message-helpers'
 
 export default {
   name: 'ChatRoom',
+  mixins:[messageHelpers],
   data() {
     return {
       msg: process.env.API_URL,
@@ -84,12 +93,11 @@ export default {
       connectedParticipants: [],
       connected: false,
       showAutoComplete: false,
-      msgSlice: '',
       lastAt: -1,
       doAutoComplete: false,
       autoCompleteFilter: '',
       autoCompleteList: [],
-      cursorPos: 0,
+      allowAlerts: true,      
     };
   },
   components:{
@@ -124,7 +132,7 @@ export default {
       }
     },
     keydownHandler(e){
-      if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete){
+      if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete && this.autoCompleteList.length > 0){
         this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
         e.preventDefault();
         return
@@ -226,26 +234,26 @@ export default {
         this.socket = io('http://173.69.59.200:5000', { query: `name=${this.name}` });
 
         this.socket.on('connection-error', (data) => {
-          //this.connectionError = data;
-          alert('Username already taken.')
+          alert(`Username ${this.name} already taken.`)
+          this.$refs.name.focus();
         })
 
         this.socket.on('connection-success', (data) => {
           this.connected = true;
+          this.$refs.message.focus();
         })
 
-        this.socket.on('message', (data) => {
-          if (this.messages.length > 0 && this.messages[this.messages.length - 1].name === data.name) {
-            this.messages[this.messages.length - 1].message.push(data.message);
-          } else {
-            this.messages.push({ name: data.name, message: [data.message] });
-          }
-
-          this.$refs.msglist.scrollTop = this.$refs.msglist.scrollHeight;
-
-        });
+        this.socket.on('message', this.messageReceived);
         
-        this.socket.on('user-connected', this.loadParticipants);
+        this.socket.on('user-connected', data => {
+          this.messages.push({ name: `${data[0]} has connected!`, message: [''] })
+          this.loadParticipants(data[1])
+        });
+
+        this.socket.on('user-disconnected', data => {
+          this.messages.push({ name: `${data[0]} has disconnected!`, message: [''] })
+          this.loadParticipants(data[1])
+        });
       }
     },
   },
@@ -280,12 +288,22 @@ h1, h2 {
   border-bottom: 1px solid black;
 }
 
+.ch-left, .ch-right {
+  color: rgb(184, 231, 231);
+  flex: 1;
+}
+
 .connect-name{
   height: 20px;
   font-size: 16px;
   font-weight: bold;
   color:rgb(129, 138, 146);
   background-color: rgb(54, 55, 58);
+}
+
+.chat-emote {
+  height: 25px;
+  vertical-align: middle;
 }
 
 .connect-button{
@@ -317,7 +335,7 @@ h1, h2 {
 .connected-info{
   font-size: 18px;
   font-weight: bold;
-  color: rgb(101, 131, 212);
+  color: rgb(71, 165, 202);
 }
 
 .participant{
@@ -345,7 +363,7 @@ h1, h2 {
   background-color: #2a2b2b;
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 20px;
 }
 
 .msg-input{
@@ -379,14 +397,14 @@ input{
 
 footer {
   background-color: #2a2b2b;
-  color: rgb(101, 131, 212);
+  color: rgb(71, 165, 202);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 a {
-  color: rgb(101, 131, 212);
+  color: rgb(71, 165, 202);
 }
 
 .autocomplete {
