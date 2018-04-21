@@ -4,8 +4,12 @@
 
     <div class="chat-header">
       <div class="ch-left">
-        <input type="checkbox" id="allowAlerts" v-model="allowAlerts">
-        <label for="allowAlerts">Message Alerts</label>
+        <i class="fas alert-toggle" 
+          @click="allowAlerts = !allowAlerts" 
+          :class="allowAlerts ? 'fa-volume-up' : 'fa-volume-off'"
+          title="Allow message alerts. If off @mentions will continue to function."></i>
+        <!-- <input type="checkbox" id="allowAlerts" v-model="allowAlerts"> -->
+        <!-- <label for="allowAlerts">Message Alerts</label> -->
       </div>
       <div v-if="connected" class="connected-info ch-center">
         Connected as {{name}}
@@ -30,11 +34,7 @@
     </div>
 
     <div class="chat-container">
-      <div class="participant-list">
-        <ul>
-          <li class='participant' v-for="participant in connectedParticipants" :key="participant.sid">{{participant.name}}</li>
-        </ul>
-      </div>
+      <ParticipantList :participants="connectedParticipants"></ParticipantList> 
       <div class='msg-container'>
         <div ref="msglist" class="msg-list">
           <msg-item v-for="(msg, i) in messages" :key="`msg-${i}`" :message=msg></msg-item>
@@ -78,6 +78,7 @@
 import io from 'socket.io-client';
 import axios from 'axios';
 import MsgItem from './MsgItem';
+import ParticipantList from './ParticipantList'
 import messageHelpers from '../../mixins/message-helpers'
 
 export default {
@@ -101,7 +102,8 @@ export default {
     };
   },
   components:{
-    MsgItem
+    MsgItem,
+    ParticipantList,
   },
   created() {
     axios.get('http://173.69.59.200:5000/connections').then(r => this.loadParticipants(r.data));
@@ -246,12 +248,12 @@ export default {
         this.socket.on('message', this.messageReceived);
         
         this.socket.on('user-connected', data => {
-          this.messages.push({ name: `${data[0]} has connected!`, message: [''] })
+          this.messages.push({ name: `${data[0]} has connected!`, message: '' })
           this.loadParticipants(data[1])
         });
 
         this.socket.on('user-disconnected', data => {
-          this.messages.push({ name: `${data[0]} has disconnected!`, message: [''] })
+          this.messages.push({ name: `${data[0]} has disconnected!`, message: '' })
           this.loadParticipants(data[1])
         });
       }
@@ -326,22 +328,13 @@ h1, h2 {
   transform: translateY(-1px);
 }
 
-.participant-list{
-  min-width: 200px;
-  height: 100%;
-  background-color: rgb(44, 46, 49);
+.alert-toggle {
+  cursor: pointer;
 }
 
 .connected-info{
   font-size: 18px;
-  font-weight: bold;
   color: rgb(71, 165, 202);
-}
-
-.participant{
-  margin: 5px;
-  font-weight: bold;
-  color:rgb(129, 138, 146);
 }
 
 .msg-container{
@@ -412,7 +405,8 @@ a {
   width: 80%;
   flex-direction: column;
   background-color:rgb(44, 46, 49);
-  color: rgb(106, 175, 187);
+  color: #71e299;
+  
   padding: 3px;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
@@ -420,8 +414,7 @@ a {
 
 .autocomplete-item{
   padding: 5px;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 16px;
   border-radius: 5px;
 }
 
