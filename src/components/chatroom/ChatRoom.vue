@@ -8,8 +8,6 @@
           @click="allowAlerts = !allowAlerts" 
           :class="allowAlerts ? 'fa-volume-up' : 'fa-volume-off'"
           title="Allow message alerts. If off @mentions will continue to function."></i>
-        <!-- <input type="checkbox" id="allowAlerts" v-model="allowAlerts"> -->
-        <!-- <label for="allowAlerts">Message Alerts</label> -->
       </div>
       <div v-if="connected" class="connected-info ch-center">
         Connected as {{name}}
@@ -236,6 +234,7 @@ export default {
         this.socket = io('http://173.69.59.200:5000', { query: `name=${this.name}` });
 
         this.socket.on('connection-error', (data) => {
+          this.socket.disconnect();
           alert(`Username ${this.name} already taken.`)
           this.$refs.name.focus();
         })

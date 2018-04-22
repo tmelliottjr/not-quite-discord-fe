@@ -14,7 +14,6 @@ export default {
 </script>
 
 <style>
-
 .msg{
   background-color: #2a2b2b;
   color:rgb(184, 231, 231);
@@ -40,7 +39,4 @@ export default {
   font-size: 14px;
   letter-spacing: .25px;
 }
-
-/* Toggle Checkbox */
-
 </style>

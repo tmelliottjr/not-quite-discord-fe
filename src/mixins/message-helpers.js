@@ -21,7 +21,9 @@ export default {
         });
       }
 
-      this.$refs.msglist.scrollTop = this.$refs.msglist.scrollHeight;
+      this.$nextTick(() => {
+        this.$refs.msglist.scrollTop = this.$refs.msglist.scrollHeight;
+      });
 
       // Play message notification sound if enabled or current user was mentioned.
       // This really shouldn't be using name. SID is a more appropriate identifier.
@@ -49,7 +51,6 @@ export default {
       let m = message;
       Object.keys(this.emotes).forEach((emote) => {
         const re = new RegExp(emote, 'g');
-        console.log('emote', emote);
         m = String(m).replace(re, `<img class="chat-emote" src="${this.emotes[emote]}" title="${emote}" alt="${emote}">`);
       });
       return m;
