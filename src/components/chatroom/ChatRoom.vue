@@ -104,7 +104,7 @@ export default {
     ParticipantList,
   },
   created() {
-    axios.get(API_URL+'/connections').then(r => this.loadParticipants(r.data));
+    axios.get(process.env.API_URL+'/connections').then(r => this.loadParticipants(r.data));
   },
   methods: {
       generateAutoCompleteList() {
@@ -231,7 +231,7 @@ export default {
       let nameVerified = false;
 
       if (this.name !== '') {
-        this.socket = io(API_URL, { query: `name=${this.name}` });
+        this.socket = io(process.env.API_URL, { query: `name=${this.name}` });
 
         this.socket.on('connection-error', (data) => {
           this.socket.disconnect();
