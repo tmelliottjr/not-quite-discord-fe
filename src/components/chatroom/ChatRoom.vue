@@ -84,7 +84,7 @@ export default {
   mixins:[messageHelpers],
   data() {
     return {
-      msg: process.env.API_URL,
+      msg: '',
       messages: [],
       message: '',
       socket: '',
