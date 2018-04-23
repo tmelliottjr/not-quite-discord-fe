@@ -1,8 +1,6 @@
-'use strict'
-const merge = require('webpack-merge')
-const prodEnv = require('./prod.env')
+'use strict';
 
-module.exports = merge(prodEnv, {
+module.exports = {
   NODE_ENV: '"production"',
-  API_URL: '"http://api.nqd.tmelliottjr.com"',
-})
+  API_URL: '"http://api.nqd.tmelliottjr.com"'
+}
