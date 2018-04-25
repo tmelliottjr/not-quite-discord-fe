@@ -13,11 +13,11 @@ export default {
       // owner as this message append to existing message block.
       if (this.messages.length > 0 && this.messages[this.messages.length - 1].name === data.name) {
         this.messages[this.messages.length - 1].message
-          .push(this.processEmotes(this.sanitize(data.message)));
+          .push(this.processEmotes(data.message));
       } else {
         this.messages.push({
           name: data.name,
-          message: [this.processEmotes(this.sanitize(data.message))],
+          message: [this.processEmotes(data.message)],
         });
       }
 

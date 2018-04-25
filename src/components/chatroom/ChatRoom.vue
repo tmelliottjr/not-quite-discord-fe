@@ -248,7 +248,7 @@ export default {
 
         this.socket.on('message', this.messageReceived);
         
-        this.socket.on('user-connected', data => {
+        this.socket.on('participant-connected', data => {
           this.messages.push({ name: `${data[0]} has connected!`, message: '' })
           this.loadParticipants(data[1])
         });
