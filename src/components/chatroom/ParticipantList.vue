@@ -10,13 +10,13 @@
 <script>
 export default {
   props: ['participants'],
-  beforeUpdate() {
-        this.participants.sort((a,b )=>{
-         if(a.name.toUpperCase() < b.name.toUpperCase()) return -1;
-         if(a.name.toUpperCase() > b.name.toUpperCase()) return 1;
-         return 0;
-        })
-  }
+  // beforeUpdate() {
+  //       this.participants.sort((a,b )=>{
+  //        if(a.name.toUpperCase() < b.name.toUpperCase()) return -1;
+  //        if(a.name.toUpperCase() > b.name.toUpperCase()) return 1;
+  //        return 0;
+  //       })
+  // }
 }
 </script>
 
