@@ -253,8 +253,8 @@ export default {
         this.socket.on('message', this.messageReceived);
         
         this.socket.on('participant-connected', data => {
-          this.messages.push({ name: `${data[0]} has connected!`, message: '' })
-          this.loadParticipants(data[1])
+          this.messages.push({ name: `${data[0]} has connected!`, message: '' });
+          this.loadParticipants(data[1]);
         });
 
         this.socket.on('user-disconnected', data => {
