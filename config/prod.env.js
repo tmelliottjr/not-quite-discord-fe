@@ -2,5 +2,5 @@
 
 module.exports = {
   NODE_ENV: '"production"',
-  API_URL: '"http://nqd.tmelliottjr.com"'
+  API_URL: '"http://api.nqd.tmelliottjr.com"'
 }
