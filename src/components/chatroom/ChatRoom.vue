@@ -104,9 +104,9 @@ export default {
     ParticipantList,
   },
   created() {
-    axios.get(process.env.API_URL+'/connections')
-    .then(r => this.loadParticipants(r.data))
-    .catch(r => console.log(r));
+    // axios.get(process.env.API_URL+'/connections')
+    // .then(r => this.loadParticipants(r.data))
+    // .catch(r => console.log(r));
   },
   methods: {
       generateAutoCompleteList() {
