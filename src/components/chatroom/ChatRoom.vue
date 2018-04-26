@@ -233,7 +233,7 @@ export default {
       let nameVerified = false;
 
       if (this.name !== '') {
-        this.socket = io(process.env.API_URL, { query: `name=${this.name}` });
+        this.socket = io('http://167.99.227.154:5000', { query: `name=${this.name}` });
 
         this.socket.on('connection-error', (data) => {
           this.socket.disconnect();
