@@ -233,7 +233,11 @@ export default {
       let nameVerified = false;
 
       if (this.name !== '') {
-        this.socket = io(process.env.API_URL, { query: `name=${this.name}` });
+        this.socket = io(process.env.API_URL, { 
+          transports: ['websocket'], 
+          upgrade: false,
+          query: `name=${this.name}` 
+        });
 
         this.socket.on('connection-error', (data) => {
           this.socket.disconnect();
