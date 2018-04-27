@@ -4,58 +4,58 @@
 
     <div class="chat-header">
       <div class="ch-left">
-        <i class="fas alert-toggle" 
-          @click="allowAlerts = !allowAlerts" 
+        <i class="fas alert-toggle"
+          @click="allowAlerts = !allowAlerts"
           :class="allowAlerts ? 'fa-volume-up' : 'fa-volume-off'"
           title="Allow message alerts. If off @mentions will continue to function."></i>
       </div>
       <div v-if="connected" class="connected-info ch-center">
         Connected as {{name}}
-      </div>      
+      </div>
       <div v-else class="join-chat ch-center">
-        <input 
-          class='connect-name' 
+        <input
+          class='connect-name'
           ref='name'
-          v-model='name' 
-          @keydown.@.prevent 
-          @keydown.space.prevent 
-          type="text" 
+          v-model='name'
+          @keydown.@.prevent
+          @keydown.space.prevent
+          type="text"
           placeholder="Name">
-        <input 
-          class='connect-button' 
-          :class="name != '' ? 'enabled' : 'disabled'" 
-          @click="connect" 
-          type="button" 
+        <input
+          class='connect-button'
+          :class="name != '' ? 'enabled' : 'disabled'"
+          @click="connect"
+          type="button"
           value='Connect'>
       </div>
       <div class="ch-right"></div>
     </div>
 
     <div class="chat-container">
-      <ParticipantList :participants="connectedParticipants"></ParticipantList> 
+      <ParticipantList :participants="connectedParticipants"></ParticipantList>
       <div class='msg-container'>
         <div ref="msglist" class="msg-list">
           <msg-item v-for="(msg, i) in messages" :key="`msg-${i}`" :message=msg></msg-item>
         </div>
         <div class="msg-input">
           <div v-if="autoCompleteList.length > 0" class="autocomplete">
-            <span 
-              :data-participant="acParticipant.name" 
-              @click="completeParticipant(i)" 
-              :class="{'ac-selected': acParticipant.selected}" 
-              class="autocomplete-item" 
-              v-for="(acParticipant,i) in autoCompleteList" 
+            <span
+              :data-participant="acParticipant.name"
+              @click="completeParticipant(i)"
+              :class="{'ac-selected': acParticipant.selected}"
+              class="autocomplete-item"
+              v-for="(acParticipant,i) in autoCompleteList"
               :key="i">{{acParticipant.name}}
             </span>
           </div>
-          <input 
-            class="msg-input-content" 
-            ref='message' 
-            v-model='message' 
-            type="text" 
+          <input
+            class="msg-input-content"
+            ref='message'
+            v-model='message'
+            type="text"
             @keydown.tab.prevent
-            @keydown="keydownHandler" 
-            @keyup="keyupHandler" 
+            @keydown="keydownHandler"
+            @keyup="keyupHandler"
             @input="inputHandler"
             placeholder="Message"
             :disabled="!connected">
@@ -76,12 +76,12 @@
 import io from 'socket.io-client';
 import axios from 'axios';
 import MsgItem from './MsgItem';
-import ParticipantList from './ParticipantList'
-import messageHelpers from '../../mixins/message-helpers'
+import ParticipantList from './ParticipantList';
+import messageHelpers from '../../mixins/message-helpers';
 
 export default {
   name: 'ChatRoom',
-  mixins:[messageHelpers],
+  mixins: [messageHelpers],
   data() {
     return {
       msg: '',
@@ -96,91 +96,95 @@ export default {
       doAutoComplete: false,
       autoCompleteFilter: '',
       autoCompleteList: [],
-      allowAlerts: true,      
+      allowAlerts: true,
     };
   },
-  components:{
+  components: {
     MsgItem,
     ParticipantList,
   },
   created() {
-    axios.get(process.env.API_URL+'/connections')
-    .then(r => this.loadParticipants(r.data))
-    .catch(r => console.log(r));
+    axios.get(`${process.env.API_URL}/connections`)
+      .then(r => this.loadParticipants(r.data))
+      .catch(r => console.log(r));
   },
   methods: {
-      generateAutoCompleteList() {
-      if (this.doAutoComplete){
-        this.autoCompleteList = this.connectedParticipants.reduce((a, e, i) => {
-          if (e.name.toUpperCase().indexOf(this.autoCompleteFilter.toUpperCase()) > -1 && e.name !== this.name){
+    generateAutoCompleteList() {
+      if (this.doAutoComplete) {
+        this.autoCompleteList = this.connectedParticipants.reduce((a, e) => {
+          if (e.name.toUpperCase()
+            .indexOf(this.autoCompleteFilter.toUpperCase()) > -1 &&
+            e.name !==
+            this.name) {
             a.push({
               name: e.name,
               selected: false,
-              })
+            });
           }
-          return a
-        }, [])
+          return a;
+        }, []);
 
-        this.autoCompleteList.sort((a,b )=>{
-         if(a.name.toUpperCase() < b.name.toUpperCase()) return -1;
-         if(a.name.toUpperCase() > b.name.toUpperCase()) return 1;
-         return 0;
-        })
+        this.autoCompleteList.sort((a, b) => {
+          if (a.name.toUpperCase() < b.name.toUpperCase()) return -1;
+          if (a.name.toUpperCase() > b.name.toUpperCase()) return 1;
+          return 0;
+        });
 
-        this.autoCompleteList.slice(0, 5)
-        this.$set(this.autoCompleteList[0],'selected', true);
+        this.autoCompleteList.slice(0, 5);
+        this.$set(this.autoCompleteList[0], 'selected', true);
       } else {
         this.autoCompleteList = [];
       }
     },
-    keydownHandler(e){
-      if ((e.code == "Enter" || e.code == "Tab") && this.doAutoComplete && this.autoCompleteList.length > 0){
-        this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected))
+    keydownHandler(e) {
+      if ((e.code === 'Enter' || e.code === 'Tab') && this.doAutoComplete && this.autoCompleteList.length > 0) {
+        this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected));
         e.preventDefault();
-        return
-      } else if (e.code == "Enter") {
+        return;
+      } else if (e.code === 'Enter') {
         // Send message
         if (this.connected && this.message.length > 0) {
           this.emit();
         }
-        return
+        return;
       }
 
       if (this.doAutoComplete) {
-        if (this.autoCompleteList.length > 0 && (e.code == "ArrowUp" || e.code == "ArrowDown")) {
-          this.autoCompleteSelect(e)
+        if (this.autoCompleteList.length > 0 && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) {
+          this.autoCompleteSelect(e);
           e.preventDefault();
         }
       }
     },
     keyupHandler(e) {
-      // Only need to check for autocomplete when scrolling side to side - see discord functionality ;)
-      if(e.code === "ArrowLeft" || e.code === "ArrowRight") {
-        this.autoCompleteTest(e)
+      // Only need to check for autocomplete when
+      // scrolling side to side - see discord functionality ;)
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        this.autoCompleteTest(e);
       }
     },
-    inputHandler(e){
-      this.autoCompleteTest(e)
+    inputHandler(e) {
+      this.autoCompleteTest(e);
     },
     autoCompleteSelect(e) {
-        let currentIndex = this.autoCompleteList.findIndex(ele => ele.selected);
-        let nextIndex = 0;
+      const currentIndex = this.autoCompleteList.findIndex(ele => ele.selected);
+      let nextIndex = 0;
 
-        if (e.code === "ArrowDown") {
-          nextIndex = currentIndex == this.autoCompleteList.length - 1? 0 : currentIndex + 1;
-        } else if (e.code === "ArrowUp") {
-          nextIndex = currentIndex == 0 ? this.autoCompleteList.length - 1 : currentIndex - 1
-        }
+      if (e.code === 'ArrowDown') {
+        nextIndex = currentIndex === this.autoCompleteList.length - 1 ? 0 : currentIndex + 1;
+      } else if (e.code === 'ArrowUp') {
+        nextIndex = currentIndex === 0 ? this.autoCompleteList.length - 1 : currentIndex - 1;
+      }
 
-        this.autoCompleteList[currentIndex].selected = false;
-        this.autoCompleteList[nextIndex].selected = true;
+      this.autoCompleteList[currentIndex].selected = false;
+      this.autoCompleteList[nextIndex].selected = true;
     },
-    autoCompleteTest(e) {
+    autoCompleteTest() {
       this.lastAt = this.message.substring(0, this.$refs.message.selectionStart).lastIndexOf('@');
 
-      let prevChar = this.message.charAt(this.lastAt - 1);
+      const prevChar = this.message.charAt(this.lastAt - 1);
 
-      let cursorPos = this.$refs.message.selectionStart;
+      const cursorPos = this.$refs.message.selectionStart;
 
       this.autoCompleteFilter = this.message.substring(this.lastAt + 1, cursorPos);
 
@@ -194,72 +198,68 @@ export default {
     },
     completeParticipant(index) {
       // Preserve space if found
-      let slicePoint = this.message.indexOf(' ', this.$refs.message.selectionStart)
+      const slicePoint = this.message.indexOf(' ', this.$refs.message.selectionStart);
 
-      let end = ' '
-      if (slicePoint > -1){
+      let end = ' ';
+      if (slicePoint > -1) {
         end = `${this.message.slice(slicePoint)}`;
-      } 
+      }
 
-      let start = `${this.message.substring(0, this.lastAt + 1)}${this.autoCompleteList[index].name}`;
+      const start = `${this.message.substring(0, this.lastAt + 1)}${this.autoCompleteList[index].name}`;
 
       this.message = `${start}${end}`;
 
       this.clearAutoComplete();
 
       this.$refs.message.focus();
-
     },
     loadParticipants(data) {
-        this.connectedParticipants = [];
-        for (let key in data){
+      this.connectedParticipants = [];
+      Object.keys(data).forEach((key) => {
         this.connectedParticipants.push({
           name: data[key],
           sid: key,
-        })
-      }
+        });
+      });
     },
     clearAutoComplete() {
       this.autoCompleteList = [];
       this.autoCompleteFilter = '';
       this.doAutoComplete = false;
     },
-    emit(e) {
+    emit() {
       this.socket.emit('client-message', this.message);
       this.message = '';
     },
     connect() {
-
-      let nameVerified = false;
-
       if (this.name !== '') {
-        this.socket = io(process.env.API_URL, { 
-          transports: ['websocket'], 
+        this.socket = io(process.env.API_URL, {
+          transports: ['websocket'],
           upgrade: false,
-          query: `name=${this.name}` 
+          query: `name=${this.name}`,
         });
 
-        this.socket.on('connection-error', (data) => {
+        this.socket.on('connection-error', () => {
           this.socket.disconnect();
-          alert(`Username ${this.name} already taken.`)
+          alert(`Username ${this.name} already taken.`);
           this.$refs.name.focus();
-        })
+        });
 
-        this.socket.on('connection-success', (data) => {
+        this.socket.on('connection-success', () => {
           this.connected = true;
           this.$refs.message.focus();
-        })
+        });
 
         this.socket.on('message', this.messageReceived);
-        
-        this.socket.on('participant-connected', data => {
+
+        this.socket.on('participant-connected', (data) => {
           this.messages.push({ name: `${data[0]} has connected!`, message: '' });
           this.loadParticipants(data[1]);
         });
 
-        this.socket.on('user-disconnected', data => {
-          this.messages.push({ name: `${data[0]} has disconnected!`, message: '' })
-          this.loadParticipants(data[1])
+        this.socket.on('user-disconnected', (data) => {
+          this.messages.push({ name: `${data[0]} has disconnected!`, message: '' });
+          this.loadParticipants(data[1]);
         });
       }
     },
@@ -280,11 +280,11 @@ h1, h2 {
 }
 
 .msg-list {
-    -ms-overflow-style: none;  
-    overflow: -moz-scrollbars-none;  
+    -ms-overflow-style: none;
+    overflow: -moz-scrollbars-none;
 }
-.msg-list::-webkit-scrollbar { 
-    display: none;  
+.msg-list::-webkit-scrollbar {
+    display: none;
 }
 
 .chat-container{
@@ -411,7 +411,7 @@ a {
   flex-direction: column;
   background-color:rgb(44, 46, 49);
   color: #71e299;
-  
+
   padding: 3px;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;

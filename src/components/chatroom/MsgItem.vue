@@ -2,7 +2,10 @@
   <div class="msg">
     <span class="msg-owner">{{message.name}}</span>
     <div v-if="message.message.length > 0" class="msg-content-container">
-      <span v-for="(msg, i) in message.message" :key="`m-${i}`" class="msg-content" v-html="msg"></span>
+      <span
+        v-for="(msg, i) in message.message"
+        :key="`m-${i}`" class="msg-content"
+        v-html="msg"></span>
     </div>
   </div>
 </template>

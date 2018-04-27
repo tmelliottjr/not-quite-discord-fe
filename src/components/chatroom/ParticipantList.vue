@@ -2,7 +2,11 @@
   <div class="participant-list">
     <span class="pl-title">Participants</span>
     <ul>
-      <li class='participant' v-for="participant in participants" :key="participant.sid">{{participant.name}}</li>
+      <li
+        class='participant'
+        v-for="participant in participants"
+        :key="participant.sid">{{participant.name}}
+      </li>
     </ul>
   </div>
 </template>
@@ -10,7 +14,7 @@
 <script>
 export default {
   props: ['participants'],
-}
+};
 </script>
 
 <style scoped>
