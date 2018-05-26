@@ -1,21 +1,9 @@
-# pychat_fe
+# Not Quite Discord - Socket.IO Chat App
 
-> A Vue.js project
+http://nqd.tmelliottjr.com
 
-## Build Setup
+## Description
+Not Quite Discord is a real time messaging web app featuring @mentions, autocomplete, and emotes.
 
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-```
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+## Technologies
+JavaScript, Node.js, Express.js, NGINX, Socket.IO (web sockets), and Vue.js
