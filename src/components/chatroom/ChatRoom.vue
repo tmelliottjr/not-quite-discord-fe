@@ -4,38 +4,40 @@
 
     <div class="chat-header">
       <div class="ch-left">
-        <i class="fas alert-toggle"
+        <i
+          class="fas alert-toggle"
           @click="allowAlerts = !allowAlerts"
           :class="allowAlerts ? 'fa-volume-up' : 'fa-volume-off'"
-          title="Allow message alerts. If off @mentions will continue to function."></i>
+          title="Allow message alerts. If off @mentions will continue to function."
+        ></i>
       </div>
-      <div v-if="connected" class="connected-info ch-center">
-        Connected as {{name}}
-      </div>
+      <div v-if="connected" class="connected-info ch-center">Connected as {{name}}</div>
       <div v-else class="join-chat ch-center">
         <input
-          class='connect-name'
-          ref='name'
-          v-model='name'
+          class="connect-name"
+          ref="name"
+          v-model="name"
           @keydown.@.prevent
           @keydown.space.prevent
           type="text"
-          placeholder="Name">
+          placeholder="Name"
+        >
         <input
-          class='connect-button'
+          class="connect-button"
           :class="name != '' ? 'enabled' : 'disabled'"
           @click="connect"
           type="button"
-          value='Connect'>
+          value="Connect"
+        >
       </div>
       <div class="ch-right"></div>
     </div>
 
     <div class="chat-container">
-      <ParticipantList :participants="connectedParticipants"></ParticipantList>
-      <div class='msg-container'>
-        <div ref="msglist" class="msg-list">
-          <msg-item v-for="(msg, i) in messages" :key="`msg-${i}`" :message=msg></msg-item>
+      <ParticipantList ref="participantList" :participants="connectedParticipants"></ParticipantList>
+      <div class="msg-container" @click="this.showOrHideParticipants">
+        <div ref="msglist" class="msg-list" @scroll="this.showOrHideParticipants">
+          <msg-item v-for="(msg, i) in messages" :key="`msg-${i}`" :message="msg"></msg-item>
         </div>
         <div class="msg-input">
           <div v-if="autoCompleteList.length > 0" class="autocomplete">
@@ -45,80 +47,89 @@
               :class="{'ac-selected': acParticipant.selected}"
               class="autocomplete-item"
               v-for="(acParticipant,i) in autoCompleteList"
-              :key="i">{{acParticipant.name}}
-            </span>
+              :key="i"
+            >{{acParticipant.name}}</span>
           </div>
           <input
             class="msg-input-content"
-            ref='message'
-            v-model='message'
+            ref="message"
+            v-model="message"
             type="text"
             @keydown.tab.prevent
             @keydown="keydownHandler"
             @keyup="keyupHandler"
             @input="inputHandler"
             placeholder="Message"
-            :disabled="!connected">
+            :disabled="!connected"
+          >
         </div>
       </div>
     </div>
 
     <footer>
       <span>
-        <a href='https://github.com/tmelliottjr'>github.com/tmelliotjr</a> | Socket.IO Chat App
+        <a href="https://github.com/tmelliottjr">github.com/tmelliotjr</a> | Socket.IO Chat App
       </span>
     </footer>
   </div>
 </template>
 
 <script>
-
-import io from 'socket.io-client';
-import axios from 'axios';
-import MsgItem from './MsgItem';
-import ParticipantList from './ParticipantList';
-import messageHelpers from '../../mixins/message-helpers';
+import io from "socket.io-client";
+import axios from "axios";
+import MsgItem from "./MsgItem";
+import ParticipantList from "./ParticipantList";
+import messageHelpers from "../../mixins/message-helpers";
 
 export default {
-  name: 'ChatRoom',
+  name: "ChatRoom",
   mixins: [messageHelpers],
   data() {
     return {
-      msg: '',
+      msg: "",
       messages: [],
-      message: '',
-      socket: '',
-      name: '',
+      message: "",
+      socket: "",
+      name: "",
       connectedParticipants: [],
       connected: false,
       showAutoComplete: false,
       lastAt: -1,
       doAutoComplete: false,
-      autoCompleteFilter: '',
+      autoCompleteFilter: "",
       autoCompleteList: [],
       allowAlerts: true,
+      showParticipants: true
     };
   },
   components: {
     MsgItem,
-    ParticipantList,
+    ParticipantList
   },
   created() {
-    axios.get(`${process.env.API_URL}/connections`)
+    axios
+      .get(`${process.env.API_URL}/connections`)
       .then(r => this.loadParticipants(r.data))
       .catch(r => console.log(r));
   },
   methods: {
+    showOrHideParticipants() {
+      if (this.$refs.participantList.showParticipants) {
+        this.$refs.participantList.showOrHideParticipants();
+      }
+    },
     generateAutoCompleteList() {
       if (this.doAutoComplete) {
         this.autoCompleteList = this.connectedParticipants.reduce((a, e) => {
-          if (e.name.toUpperCase()
-            .indexOf(this.autoCompleteFilter.toUpperCase()) > -1 &&
-            e.name !==
-            this.name) {
+          if (
+            e.name
+              .toUpperCase()
+              .indexOf(this.autoCompleteFilter.toUpperCase()) > -1 &&
+            e.name !== this.name
+          ) {
             a.push({
               name: e.name,
-              selected: false,
+              selected: false
             });
           }
           return a;
@@ -131,17 +142,23 @@ export default {
         });
 
         this.autoCompleteList.slice(0, 5);
-        this.$set(this.autoCompleteList[0], 'selected', true);
+        this.$set(this.autoCompleteList[0], "selected", true);
       } else {
         this.autoCompleteList = [];
       }
     },
     keydownHandler(e) {
-      if ((e.code === 'Enter' || e.code === 'Tab') && this.doAutoComplete && this.autoCompleteList.length > 0) {
-        this.completeParticipant(this.autoCompleteList.findIndex(ele => ele.selected));
+      if (
+        (e.code === "Enter" || e.code === "Tab") &&
+        this.doAutoComplete &&
+        this.autoCompleteList.length > 0
+      ) {
+        this.completeParticipant(
+          this.autoCompleteList.findIndex(ele => ele.selected)
+        );
         e.preventDefault();
         return;
-      } else if (e.code === 'Enter') {
+      } else if (e.code === "Enter") {
         // Send message
         if (this.connected && this.message.length > 0) {
           this.emit();
@@ -150,7 +167,10 @@ export default {
       }
 
       if (this.doAutoComplete) {
-        if (this.autoCompleteList.length > 0 && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) {
+        if (
+          this.autoCompleteList.length > 0 &&
+          (e.code === "ArrowUp" || e.code === "ArrowDown")
+        ) {
           this.autoCompleteSelect(e);
           e.preventDefault();
         }
@@ -159,7 +179,7 @@ export default {
     keyupHandler(e) {
       // Only need to check for autocomplete when
       // scrolling side to side - see discord functionality ;)
-      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+      if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
         this.autoCompleteTest(e);
       }
     },
@@ -170,25 +190,40 @@ export default {
       const currentIndex = this.autoCompleteList.findIndex(ele => ele.selected);
       let nextIndex = 0;
 
-      if (e.code === 'ArrowDown') {
-        nextIndex = currentIndex === this.autoCompleteList.length - 1 ? 0 : currentIndex + 1;
-      } else if (e.code === 'ArrowUp') {
-        nextIndex = currentIndex === 0 ? this.autoCompleteList.length - 1 : currentIndex - 1;
+      if (e.code === "ArrowDown") {
+        nextIndex =
+          currentIndex === this.autoCompleteList.length - 1
+            ? 0
+            : currentIndex + 1;
+      } else if (e.code === "ArrowUp") {
+        nextIndex =
+          currentIndex === 0
+            ? this.autoCompleteList.length - 1
+            : currentIndex - 1;
       }
 
       this.autoCompleteList[currentIndex].selected = false;
       this.autoCompleteList[nextIndex].selected = true;
     },
     autoCompleteTest() {
-      this.lastAt = this.message.substring(0, this.$refs.message.selectionStart).lastIndexOf('@');
+      this.lastAt = this.message
+        .substring(0, this.$refs.message.selectionStart)
+        .lastIndexOf("@");
 
       const prevChar = this.message.charAt(this.lastAt - 1);
 
       const cursorPos = this.$refs.message.selectionStart;
 
-      this.autoCompleteFilter = this.message.substring(this.lastAt + 1, cursorPos);
+      this.autoCompleteFilter = this.message.substring(
+        this.lastAt + 1,
+        cursorPos
+      );
 
-      if (cursorPos > this.lastAt && (prevChar === ' ' || prevChar === '') && this.lastAt > -1) {
+      if (
+        cursorPos > this.lastAt &&
+        (prevChar === " " || prevChar === "") &&
+        this.lastAt > -1
+      ) {
         this.doAutoComplete = true;
         this.generateAutoCompleteList();
         this.doAutoComplete = this.autoCompleteList.length > 0;
@@ -198,14 +233,19 @@ export default {
     },
     completeParticipant(index) {
       // Preserve space if found
-      const slicePoint = this.message.indexOf(' ', this.$refs.message.selectionStart);
+      const slicePoint = this.message.indexOf(
+        " ",
+        this.$refs.message.selectionStart
+      );
 
-      let end = ' ';
+      let end = " ";
       if (slicePoint > -1) {
         end = `${this.message.slice(slicePoint)}`;
       }
 
-      const start = `${this.message.substring(0, this.lastAt + 1)}${this.autoCompleteList[index].name}`;
+      const start = `${this.message.substring(0, this.lastAt + 1)}${
+        this.autoCompleteList[index].name
+      }`;
 
       this.message = `${start}${end}`;
 
@@ -215,79 +255,86 @@ export default {
     },
     loadParticipants(data) {
       this.connectedParticipants = [];
-      Object.keys(data).forEach((key) => {
+      Object.keys(data).forEach(key => {
         this.connectedParticipants.push({
           name: data[key],
-          sid: key,
+          sid: key
         });
       });
     },
     clearAutoComplete() {
       this.autoCompleteList = [];
-      this.autoCompleteFilter = '';
+      this.autoCompleteFilter = "";
       this.doAutoComplete = false;
     },
     emit() {
-      this.socket.emit('client-message', this.message);
-      this.message = '';
+      this.socket.emit("client-message", this.message);
+      this.message = "";
     },
     connect() {
-      if (this.name !== '') {
+      if (this.name !== "") {
         this.socket = io(process.env.API_URL, {
-          transports: ['websocket'],
+          transports: ["websocket"],
           upgrade: false,
-          query: `name=${this.name}`,
+          query: `name=${this.name}`
         });
 
-        this.socket.on('connection-error', () => {
+        this.socket.on("connection-error", () => {
           this.socket.disconnect();
           alert(`Username ${this.name} already taken.`);
           this.$refs.name.focus();
         });
 
-        this.socket.on('connection-success', () => {
+        this.socket.on("connection-success", () => {
           this.connected = true;
           this.$refs.message.focus();
         });
 
-        this.socket.on('message', this.messageReceived);
+        this.socket.on("message", this.messageReceived);
 
-        this.socket.on('participant-connected', (data) => {
-          this.messages.push({ name: `${data[0]} has connected!`, message: '' });
+        this.socket.on("participant-connected", data => {
+          this.messages.push({
+            name: `${data[0]} has connected!`,
+            message: ""
+          });
           this.loadParticipants(data[1]);
         });
 
-        this.socket.on('user-disconnected', (data) => {
-          this.messages.push({ name: `${data[0]} has disconnected!`, message: '' });
+        this.socket.on("user-disconnected", data => {
+          this.messages.push({
+            name: `${data[0]} has disconnected!`,
+            message: ""
+          });
           this.loadParticipants(data[1]);
         });
       }
-    },
-  },
+    }
+  }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-h1, h2 {
+h1,
+h2 {
   font-weight: normal;
 }
 
-.container{
+.container {
   height: 100%;
   display: grid;
   grid-template-rows: 60px 1fr 60px;
 }
 
 .msg-list {
-    -ms-overflow-style: none;
-    overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+  overflow: -moz-scrollbars-none;
 }
 .msg-list::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
-.chat-container{
+.chat-container {
   width: 100%;
   height: 100%;
   background-color: rgb(45, 48, 54);
@@ -295,16 +342,17 @@ h1, h2 {
   border-bottom: 1px solid black;
 }
 
-.ch-left, .ch-right {
+.ch-left,
+.ch-right {
   color: rgb(184, 231, 231);
   flex: 1;
 }
 
-.connect-name{
+.connect-name {
   height: 20px;
   font-size: 16px;
   font-weight: bold;
-  color:rgb(129, 138, 146);
+  color: rgb(129, 138, 146);
   background-color: rgb(54, 55, 58);
 }
 
@@ -313,7 +361,7 @@ h1, h2 {
   vertical-align: middle;
 }
 
-.connect-button{
+.connect-button {
   line-height: 20px;
   font-size: 16px;
   background-color: #333;
@@ -321,50 +369,56 @@ h1, h2 {
   transition: all 1s ease;
 }
 
-.connect-button.disabled{
+.connect-button.disabled {
   background-color: rgb(182, 114, 114);
 }
 
-.connect-button.enabled{
+.connect-button.enabled {
   background-color: rgb(114, 182, 131);
 }
 
-.connect-button:hover{
+.connect-button:hover {
   transform: translateY(-1px);
 }
 
-.alert-toggle {
+.alert-toggle,
+.participant-toggle {
   cursor: pointer;
 }
 
-.connected-info{
+.alert-toggle:hover,
+.participant-toggle:hover {
+  color: rgb(71, 165, 202);
+}
+
+.connected-info {
   font-size: 18px;
   color: rgb(71, 165, 202);
 }
 
-.msg-container{
+.msg-container {
   display: flex;
   flex-direction: column;
   position: relative;
   width: 100%;
 }
 
-.msg-list{
-  width: 90%;
+.msg-list {
+  width: 85%;
   max-height: 90%;
   position: absolute;
   overflow-y: scroll;
   align-self: center;
 }
 
-.chat-header{
+.chat-header {
   background-color: #2a2b2b;
   display: flex;
   align-items: center;
   padding: 20px;
 }
 
-.msg-input{
+.msg-input {
   align-self: center;
   justify-content: center;
   align-items: center;
@@ -375,7 +429,7 @@ h1, h2 {
   width: 100%;
 }
 
-.msg-input-content{
+.msg-input-content {
   font-size: 16px;
   width: 80%;
   margin-bottom: 5px;
@@ -384,13 +438,13 @@ h1, h2 {
   border-radius: 2.5px;
   padding: 5px;
   font-weight: bold;
-  color:rgb(129, 138, 146);
+  color: rgb(129, 138, 146);
 }
 
-input{
-  outline-style:none;
-  box-shadow:none;
-  border-color:transparent;
+input {
+  outline-style: none;
+  box-shadow: none;
+  border-color: transparent;
 }
 
 footer {
@@ -409,7 +463,7 @@ a {
   display: flex;
   width: 80%;
   flex-direction: column;
-  background-color:rgb(44, 46, 49);
+  background-color: rgb(44, 46, 49);
   color: #71e299;
 
   padding: 3px;
@@ -417,16 +471,16 @@ a {
   border-top-right-radius: 5px;
 }
 
-.autocomplete-item{
+.autocomplete-item {
   padding: 5px;
   font-size: 16px;
   border-radius: 5px;
 }
 
-.autocomplete-item:hover, .ac-selected {
+.autocomplete-item:hover,
+.ac-selected {
   cursor: pointer;
   background-color: rgba(255, 255, 255, 0.05);
 }
-
 </style>
 
