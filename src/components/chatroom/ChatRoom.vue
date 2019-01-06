@@ -160,7 +160,6 @@ export default {
         return;
       } else if (e.code === "Enter") {
         // Send message
-        alert(e.code)
         if (this.connected && this.message.length > 0) {
           this.emit();
         }
@@ -185,6 +184,7 @@ export default {
       }
     },
     inputHandler(e) {
+      alert(e.code);
       this.autoCompleteTest(e);
     },
     autoCompleteSelect(e) {
