@@ -26,7 +26,13 @@ export default {
   methods: {
     showOrHideParticipants: function() {
       this.showParticipants = !this.showParticipants;
+    },
+    resizeHandler: function() {
+      this.showParticipants = false;
     }
+  },
+  mounted: function() {
+    window.addEventListener("resize", this.resizeHandler);
   }
 };
 </script>
