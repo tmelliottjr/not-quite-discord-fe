@@ -149,7 +149,7 @@ export default {
     },
     keydownHandler(e) {
       if (
-        (e.code === "Enter" || e.code === "Tab") &&
+        (e.code === "Enter" || e.code === "Tab" || e.key === "Enter") &&
         this.doAutoComplete &&
         this.autoCompleteList.length > 0
       ) {
@@ -158,7 +158,7 @@ export default {
         );
         e.preventDefault();
         return;
-      } else if (e.code === "Enter") {
+      } else if (e.code === "Enter" || e.key === "Enter") {
         // Send message
         if (this.connected && this.message.length > 0) {
           this.emit();
@@ -184,7 +184,6 @@ export default {
       }
     },
     inputHandler(e) {
-      alert(e.code);
       this.autoCompleteTest(e);
     },
     autoCompleteSelect(e) {
