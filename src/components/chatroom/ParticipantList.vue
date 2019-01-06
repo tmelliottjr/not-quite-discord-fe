@@ -83,7 +83,7 @@ export default {
     left: -300px;
     z-index: 20;
     min-width: 300px;
-    height: calc(100vh - 120px);
+    height: -webkit-calc(100% - 120px);
   }
 
   .participant-list.shown {
