@@ -367,6 +367,9 @@ h2 {
   background-color: #333;
   cursor: pointer;
   transition: all 1s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .connect-button.disabled {
